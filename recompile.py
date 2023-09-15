@@ -15,6 +15,10 @@ ot = OffsetTree.load()
 
 
 def save_to_esm(update_records: list[Record]):
+    if len(update_records) == 0:
+        print("Nothing to do")
+        return
+
     # copy esm for backup
     orig_esm_path = STARFIELD_ESM.with_suffix(".esm.orig")
     if not orig_esm_path.exists():
@@ -24,9 +28,9 @@ def save_to_esm(update_records: list[Record]):
     size_changes = []
     update_records.sort(key=lambda r: ot.get_formid(r.formid)[0])
     for r in update_records:
-        if r.size != r.actual_size:
-            start, end, parent, _ = ot.get_formid(r.formid)
-            size_changes.append((start, end, parent, r))
+        start, end, parent, _ = ot.get_formid(r.formid)
+        size_changes.append((start, end, parent, r))
+
 
     # convert to offset map
     # size_changes: (150, 200, +10), (300, 350, +10)
@@ -48,6 +52,7 @@ def save_to_esm(update_records: list[Record]):
         offset_map[(start+sumdiff, end+sumdiff+rdiff)] = r
         sumdiff += rdiff
 
+    pprint(size_changes)
     total_size = ot.offsets[ot.starts[-1]].end
     prev_start, prev_end = list(offset_map.keys())[-1]
     offset_map[(prev_end, total_size+sumdiff)] = (prev_end-sumdiff, start-sumdiff)
@@ -106,6 +111,8 @@ def recompile():
     changed_records = []
     for f in changed_files():
         record = Record.load(f)
+        if record.originally_compressed:
+            record.compress()
         changed_records.append(record)
     print(changed_records)
     save_to_esm(changed_records)

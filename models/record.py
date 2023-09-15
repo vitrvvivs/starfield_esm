@@ -27,7 +27,8 @@ class Record:
         self.formid = FormID(header[12:16])
         self.path = (DB_DIR / self.group / (self.formid + '.bin'))
         self.edid = edid_index.get(self.formid, "")
-        self.compressed = (self.header[10] & 4) > 0
+        self.originally_compressed = (self.header[10] & 4) > 0
+        self.compressed = self.originally_compressed
         self.fields = []
 
         if data:

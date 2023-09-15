@@ -2,7 +2,7 @@
 - make sure the paths in config.py are correct
 - `python cli.py create_db`
   - This creates DB_DIR (default ~/starfield/db) and fills it with binary dumps of each record
-- look up the FormID in DB_DIR/index.json
+- look up the filename in DB_DIR/index.json
 - edit the file in your favorite hex editor
 - `python cli.py recompile`
-  - Saves modified records back to starfield.esm
+  - This saves modified records back to starfield.esm

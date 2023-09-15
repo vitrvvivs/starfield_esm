@@ -3,7 +3,7 @@ from typing import Tuple
 
 from config import *
 from models.record import Record, FormID, Group, EDID
-from offsets import iter_offsets
+from offsets import iter_offsets, OffsetTree
 import json
 
 _edid_index_path = DB_DIR / "index.json"
@@ -40,9 +40,11 @@ def load_indices() -> Tuple[dict[EDID, Group_FormID], dict[FormID, EDID]]:
 # Populates DB_DIR with files 'group/formid.bin'
 def create_db(flush_cache=False, only_index=False) -> None:
     edid_index = {}
+    ot = OffsetTree()
     with STARFIELD_ESM.open('rb') as esm:
         for rtype, formid, start, end in iter_offsets(esm):
             if rtype == "group":
+                group_node = ot.add_node(start, end, None, [formid])
                 continue
             esm.seek(start)
             header = esm.read(24)
@@ -50,11 +52,19 @@ def create_db(flush_cache=False, only_index=False) -> None:
 
             data = esm.read(record.size)
             record.raw_data = data
-            record.decompress()
+            try:
+                record.decompress()
+            except:
+                print(record, header)
+                print(data)
+                print()
+                continue
 
             edid = record.parse_edid()
             if edid:
                 edid_index[edid] = record.group + '/' + record.formid
+
+            ot.add_node(start, end, group_node, [formid])
 
             if not only_index:
                 record.path.parent.mkdir(exist_ok=True)
@@ -64,6 +74,8 @@ def create_db(flush_cache=False, only_index=False) -> None:
     if flush_cache or not _edid_index_path.exists():
         with _edid_index_path.open('w') as f:
             json.dump(edid_index, f, indent=2)
+        ot.sort()
+        ot.save()
 
     (DB_DIR / "timestamp").open('w+').write(str(int(time.time())))
 

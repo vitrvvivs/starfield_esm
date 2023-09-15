@@ -13,11 +13,11 @@ from common import *
 
 
 index, edids = load_indices()
-pndt = Record.load(index["JaffaVI-cPlanetData"], edid_index=edids)
+pndt = Record.load(index["JaffaVI-cPlanetData"])
 print(pndt)
 pndt.parse()
 
-biom = Record.load(index["FrozenNoLife11"], edid_index=edids)
+biom = Record.load(index["FrozenNoLife11"])
 biom.parse()
 
 pccc = b''
@@ -42,3 +42,4 @@ while i < len(pccc):
     i += size + 8
 
 #pprint(pndt.fields)
+ot = OffsetTree.load()
